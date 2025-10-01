@@ -1,388 +1,197 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Bicycle Connectivity Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
-  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
-  <style>
-    body { margin: 0; padding: 0; }
-    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+<meta charset="utf-8">
+<title>Bicycle Connectivity Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
+<style>
+body { margin:0; padding:0; }
+#map { position:absolute; top:0; bottom:0; width:100%; }
 
-    #map-overlay {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-family: "DIN Pro", "Arial", sans-serif;
-      color: black;
-      z-index: 2;
-      max-width: 300px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
+#map-overlay {
+  position:absolute;
+  top:10px;
+  left:10px;
+  background: rgba(255,255,255,0.95);
+  padding:12px 16px;
+  border-radius:8px;
+  font-family:"DIN Pro","Arial",sans-serif;
+  color:black;
+  z-index:2;
+  max-width:300px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
 
-    #map-title {
-      font-size: 20px;
-      margin: 0 0 10px 0;
-      font-weight: bold;
-    }
+#menu-button {
+  display:none;
+}
 
-    #legend {
-      margin-top: 10px;
-      font-size: 13px;
-    }
+#map-title { font-size:20px; margin:0 0 10px 0; font-weight:bold; }
+#legend { margin-top:10px; font-size:13px; }
+.gradient-bar { height:18px; width:200px; border:1px solid #999; margin-bottom:4px; }
+.legend-labels { display:flex; justify-content:space-between; width:200px; font-size:12px; margin-left:0; }
+#style-switcher { margin-top:12px; font-size:14px; }
+#style-switcher strong { display:block; margin-top:6px; }
+#style-switcher label { display:flex; align-items:flex-start; gap:8px; cursor:pointer; margin-bottom:12px; line-height:1.25; }
+#style-switcher input[type="radio"] { margin-top:4px; flex:0 0 auto; width:16px; height:16px; }
+#style-switcher label > span { display:block; flex:1 1 0; }
+#style-switcher label.main-group-label > span { font-weight:bold; font-size:14px; }
+.suboptions { margin-left:28px; margin-top:6px; display:none; }
+.suboptions label > span { font-size:13px; font-weight:normal; }
 
-    .gradient-bar {
-      height: 18px;
-      width: 200px;
-      border: 1px solid #999;
-      margin-bottom: 4px;
-    }
-    .legend-labels {
-      display: flex;
-      justify-content: space-between;
-      width: 200px;
-      font-size: 12px;
-      margin-left: 0;
-    }
+/* Description box with fixed width and dynamic height */
+#description-box {
+  position:absolute;
+  bottom:10px;
+  left:10px;
+  width:400px;
+  background: rgba(255,255,255,0.95);
+  padding:12px 16px;
+  border-radius:8px;
+  font-family:"DIN Pro","Arial",sans-serif;
+  color:black;
+  z-index:2;
+  font-size:13px;
+  line-height:1.4;
+  overflow-wrap:break-word;
+  white-space:normal;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+  max-height:none; /* allow full height */
+}
 
-    #style-switcher {
-      margin-top: 12px;
-      font-size: 14px;
-    }
-    #style-switcher strong {
-      display: block;
-      margin-top: 6px;
-    }
+/* ensure Mapbox bottom-left controls don't overlap description */
+.mapboxgl-ctrl-bottom-left { display:none; }
 
-    /*
-      Use flex layout on labels so the radio sits left and the text (span)
-      becomes a flex child and wraps — wrapped lines align under the first
-      text line (not under the radio).
-    */
-    #style-switcher label {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      cursor: pointer;
-      margin-bottom: 12px; /* double spacing */
-      line-height: 1.25;
-    }
-    #style-switcher input[type="radio"] {
-      margin-top: 4px; /* small shift to vertically centre with first text line */
-      flex: 0 0 auto;
-      width: 16px;
-      height: 16px;
-    }
-    #style-switcher label > span {
-      display: block; /* allows wrapping */
-      flex: 1 1 0;
-    }
-
-    /* Bold the four main group headings */
-    #style-switcher label.main-group-label > span {
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    /* Suboption container (indent and hide by default) */
-    .suboptions {
-      margin-left: 28px;
-      margin-top: 6px;
-      display: none;
-    }
-
-    /* Suboption label font is slightly smaller */
-    .suboptions label > span {
-      font-size: 13px;
-      font-weight: normal;
-    }
-
-    /* Description box (bottom-left) */
-    #description-box {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background: rgba(255,255,255,0.95);
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-family: "DIN Pro", "Arial", sans-serif;
-      color: black;
-      z-index: 2;
-      width: 400px;           /* fixed width per your request */
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      font-size: 13px;
-      line-height: 1.4;
-      overflow-wrap: break-word;
-      white-space: normal;
-    }
-
-    /* ensure Mapbox's bottom-left ctrl doesn't overlap the description */
-    .mapboxgl-ctrl-bottom-left { display: none; }
-  </style>
+/* MOBILE STYLING */
+@media (max-width:768px){
+  #map-overlay{display:none; top:50px; left:10px; right:10px; width:auto; max-width:unset; font-size:14px; z-index:3;}
+  #menu-button{display:block; position:absolute; top:10px; left:10px; z-index:4; background:#fff; border:1px solid #999; border-radius:5px; padding:6px 10px; font-size:14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+  #description-box{width:calc(100% - 20px); left:10px; right:10px; bottom:10px; font-size:12px; padding:10px;}
+  #style-switcher{max-height:none; overflow-y:visible;}
+  #map-title{font-size:18px;}
+  .legend-labels{font-size:11px;}
+  .suboptions{margin-left:16px; font-size:12px;} /* indent suboptions for mobile */
+}
+</style>
 </head>
 <body>
 
 <div id="map"></div>
 
+<button id="menu-button">Menu</button>
+
 <div id="map-overlay">
   <div id="map-title">Cycling Connectivity Melbourne</div>
-
-  <!-- Legend -->
   <div id="legend"></div>
-
-  <!-- Style switcher -->
   <div id="style-switcher">
     <strong>Choose Layer:</strong>
-
-    <!-- Group 1: Importance of link -->
-    <label class="main-group-label">
-      <input type="radio" name="layer-group" id="link-betweenness">
-      <span>Importance of link to Network</span>
-    </label>
+    <label class="main-group-label"><input type="radio" name="layer-group" id="link-betweenness"><span>Importance of link to Network</span></label>
     <div id="betweenness-suboptions" class="suboptions">
       <label><input type="radio" name="betweenness-sub" id="unfactored"><span>Fixed route attributes included only</span></label>
       <label><input type="radio" name="betweenness-sub" id="factored" checked><span>Both fixed and unfixed attributes</span></label>
       <label><input type="radio" name="betweenness-sub" id="difference"><span>Change to importance when unfixed attributes are added</span></label>
     </div>
-
-    <!-- Group 2: Access to Ideal Trip Options -->
-    <label class="main-group-label">
-      <input type="radio" name="layer-group" id="choropleth">
-      <span>Access to Ideal Trip Options</span>
-    </label>
+    <label class="main-group-label"><input type="radio" name="layer-group" id="choropleth"><span>Access to Ideal Trip Options</span></label>
     <div id="choropleth-suboptions" class="suboptions">
       <label><input type="radio" name="choropleth-sub" id="choropleth-existing" checked><span>Existing network</span></label>
-      <label><input type="radio" name="choropleth-sub" id="choropleth-improvements"><span>With improvements to key unfixed attributes (with new protected bike lanes)</span></label>
+      <label><input type="radio" name="choropleth-sub" id="choropleth-improvements"><span>With improvements</span></label>
       <label><input type="radio" name="choropleth-sub" id="choropleth-change"><span>Change from improvements</span></label>
     </div>
-
-    <!-- Group 3: Weighting of Link Attributes -->
-    <label class="main-group-label">
-      <input type="radio" name="layer-group" id="link-weighting">
-      <span>Weighting of Link Attributes</span>
-    </label>
+    <label class="main-group-label"><input type="radio" name="layer-group" id="link-weighting"><span>Weighting of Link Attributes</span></label>
     <div id="weighting-suboptions" class="suboptions">
       <label><input type="radio" name="weighting-sub" id="weighting-existing" checked><span>Existing network</span></label>
-      <label><input type="radio" name="weighting-sub" id="weighting-improvements"><span>With improvements to key unfixed attributes (with new protected bike lanes)</span></label>
+      <label><input type="radio" name="weighting-sub" id="weighting-improvements"><span>With improvements</span></label>
       <label><input type="radio" name="weighting-sub" id="weighting-change"><span>Change from improvements</span></label>
     </div>
-
-    <!-- Group 4: Cyclist Types -->
-    <label class="main-group-label">
-      <input type="radio" name="layer-group" id="linkscore-alt">
-      <span>Cyclists Types and where they are comfortable cycling</span>
-    </label>
+    <label class="main-group-label"><input type="radio" name="layer-group" id="linkscore-alt"><span>Cyclists Types and where they are comfortable cycling</span></label>
   </div>
 </div>
 
-<!-- Description box -->
 <div id="description-box"></div>
 
 <script>
-  mapboxgl.accessToken = 'pk.eyJ1IjoiYm1lbiIsImEiOiJjbWZtMGQwc28wMmJlMnFvZWNjaXY5eW03In0.Su60i1Xyh3ejDhmiJf2NCg';
+mapboxgl.accessToken = 'pk.eyJ1IjoiYm1lbiIsImEiOiJjbWZtMGQwc28wMmJlMnFvZWNjaXY5eW03In0.Su60i1Xyh3ejDhmiJf2NCg';
 
-  const styles = {
-    // Access to Ideal Trip Options
-    'choropleth-existing': 'mapbox://styles/bmen/cmfb3otgq004001ss00ri10ue',
-    'choropleth-improvements': '', // placeholder
-    'choropleth-change': '',       // placeholder
+const styles = {
+  'choropleth-existing':'mapbox://styles/bmen/cmfb3otgq004001ss00ri10ue',
+  'choropleth-improvements':'',
+  'choropleth-change':'',
+  'weighting-existing':'mapbox://styles/bmen/cmfb2vrn5004901su3rwl75xl',
+  'weighting-improvements':'',
+  'weighting-change':'',
+  unfactored:'mapbox://styles/bmen/cmfl094g4003601sjb3cw8axe',
+  factored:'mapbox://styles/bmen/cmfl1v5qj006s01sr4g7uhiu9',
+  difference:'mapbox://styles/bmen/cmfl1xxvg006t01srbsulf23b',
+  'linkscore-alt':'mapbox://styles/bmen/cmg5115hg00cp01sm55538y1r'
+};
 
-    // Weighting of Link Attributes
-    'weighting-existing': 'mapbox://styles/bmen/cmfb2vrn5004901su3rwl75xl',
-    'weighting-improvements': '', // placeholder
-    'weighting-change': '',       // placeholder
+const descriptions = {
+  "link-betweenness":"<b>Importance of Link in Cycling Network</b> quantifies how frequently a link (segment of street or path) is on a shortest path, and therefore how important of a role it plays in providing connectivity for the whole network.",
+  "choropleth":"<b>Access to ideal trip options</b> quantifies the average ease to which a rider within a given area can access a direct and quality (comfortable to ride on) bike path.",
+  "link-weighting":"Each link (segment of street or path) has been <b>weighted based on it's attributes</b>. These include <b>fixed</b> attributes such as slope, and <b>unfixed</b> attributes such as degree of bike lane protected-ness. The weighting is applied to each link to quantify the effects of positive and negative attributes within the shortest path algorithm. This is to gain a better measure of connectivity from the algorithm.",
+  "linkscore-alt":"Different Cyclists feel only feel <b>comfortable cycling in particular environements</b>. The range that a cyclists is willing to go is mapped based on their <b>level of confidence</b>."
+};
 
-    // Link Betweenness
-    unfactored: 'mapbox://styles/bmen/cmfl094g4003601sjb3cw8axe',
-    factored: 'mapbox://styles/bmen/cmfl1v5qj006s01sr4g7uhiu9',
-    difference: 'mapbox://styles/bmen/cmfl1xxvg006t01srbsulf23b',
+const customLegends = {
+  "choropleth-existing":`<div id="legend-title">Access Percent</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(0,194,0), rgb(255,243,173), rgb(227,13,0));"></div><div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
+  "weighting-existing":`<div id="legend-title">Weighting</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), #ffffb3, rgb(0,194,0));"></div><div class="legend-labels"><span>-[]</span><span>0</span><span>[]</span></div>`,
+  unfactored:`<div id="legend-title">Percent Importance</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), #ffffb3, rgb(0,194,0));"></div><div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
+  factored:`<div id="legend-title">Percent Importance</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), #ffffb3, rgb(0,194,0));"></div><div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
+  difference:`<div id="legend-title">Change in Importance</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), rgb(255,243,173), rgb(0,194,0));"></div><div class="legend-labels"><span>-[]%</span><span>0%</span><span>[]%</span></div>`,
+  "choropleth-improvements":`<div id="legend-title">Access Percent</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(0,194,0), rgb(255,243,173), rgb(227,13,0));"></div><div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
+  "choropleth-change":`<div id="legend-title">Change in Access</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), rgb(255,243,173), rgb(0,194,0));"></div><div class="legend-labels"><span>-[]%</span><span>0%</span><span>[]%</span></div>`,
+  "linkscore-alt":`<div id="legend-title">Rider Categories</div>
+  <div class="legend-list" style="margin-top:5px;font-size:13px;">
+    <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(245,133,5);margin-right:8px;"></div><span>Strong and Fearless</span></div>
+    <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(167,21,193);margin-right:8px;"></div><span>Enthused and Confident</span></div>
+    <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(27,163,254);margin-right:8px;"></div><span>Interested but Concerned</span></div>
+    <div style="display:flex;align-items:center;"><div style="width:20px;height:10px;background-color:rgb(0,189,0);margin-right:8px;"></div><span>No Way No How</span></div>
+  </div>`
+};
 
-    // Cyclist Types
-    'linkscore-alt': 'mapbox://styles/bmen/cmg5115hg00cp01sm55538y1r'
-  };
+const map = new mapboxgl.Map({
+  container:'map',
+  style:styles['choropleth-existing'],
+  center:[144.9631,-37.8136],
+  zoom:12
+});
+map.addControl(new mapboxgl.NavigationControl({visualizePitch:true}),'top-right');
+map.addControl(new mapboxgl.ScaleControl({maxWidth:200,unit:'metric'}),'bottom-right');
 
-  const descriptions = {
-    "link-betweenness": "<b>Importance of Link in Cycling Network</b> quantifies how frequently a link (segment of street or path) is on a shortest path, and therefore how important of a role it plays in providing connectivity for the whole network.",
-    "choropleth": "<b>Access to ideal trip options</b> quantifies the average ease to which a rider within a given area can access a direct and quality (comfortable to ride on) bike path.",
-    "link-weighting": "Each link (segment of street or path) has been <b>weighted based on it's attributes</b>. These include <b>fixed</b> attributes such as slope, and <b>unfixed</b> attributes such as degree of bike lane protected-ness. The weighting is applied to each link to quantify the effects of positive and negative attributes within the shortest path algorithm. This is to gain a better measure of connectivity from the algorithm.",
-    "linkscore-alt": `Different Cyclists feel only feel <b>comfortable cycling in particular environements</b>. The range that a cyclists is willing to go is mapped based on their <b>level of confidence</b>. These 4 levels are:<br>
-1. <u>Strong and Fearless</u> (4% of people): willing to bicycle under any traffic conditions,<br>
-2. <u>Enthused and Confident</u> (9% of people): comfortable with minimal bicycle accommodations,<br>
-3. <u>Interested but Concerned</u> (56% of people): uncomfortable with high vehicle speeds and volume,<br>
-4. <u>No Way No How</u> (31% of people): not interested in bicycling.`
-  };
+function renderLegend(styleId){document.getElementById("legend").innerHTML=customLegends[styleId]||"<div>No legend available</div>";}
+function renderDescription(groupId){document.getElementById("description-box").innerHTML=descriptions[groupId]||"";}
 
-  const map = new mapboxgl.Map({
-    container: 'map',
-    style: styles['choropleth-existing'], // default
-    center: [144.9631, -37.8136],
-    zoom: 12
+document.querySelectorAll("input[name='layer-group']").forEach(radio=>{
+  radio.addEventListener("change",()=>{
+    const id=radio.id;
+    document.querySelectorAll(".suboptions").forEach(el=>el.style.display="none");
+    if(id==="link-betweenness"){document.getElementById("betweenness-suboptions").style.display="block"; const subId=document.querySelector("input[name='betweenness-sub']:checked").id; if(styles[subId]){map.setStyle(styles[subId]); map.once("styledata",()=>renderLegend(subId));}else renderLegend(subId);}
+    else if(id==="choropleth"){document.getElementById("choropleth-suboptions").style.display="block"; const subId=document.querySelector("input[name='choropleth-sub']:checked").id; if(styles[subId]){map.setStyle(styles[subId]); map.once("styledata",()=>renderLegend(subId));}else renderLegend(subId);}
+    else if(id==="link-weighting"){document.getElementById("weighting-suboptions").style.display="block"; const subId=document.querySelector("input[name='weighting-sub']:checked").id; if(styles[subId]){map.setStyle(styles[subId]); map.once("styledata",()=>renderLegend(subId));}else renderLegend(subId);}
+    else{if(styles[id]){map.setStyle(styles[id]); map.once("styledata",()=>renderLegend(id));}else renderLegend(id);}
+    renderDescription(id);
   });
+});
 
-  // Controls
-  map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
-  // move scale to bottom-right so description box has bottom-left space
-  map.addControl(new mapboxgl.ScaleControl({ maxWidth: 200, unit: 'metric' }), 'bottom-right');
-
-  // Custom static legends
-  const customLegends = {
-    "choropleth-existing": `
-      <div id="legend-title">Access Percent</div>
-      <div class="gradient-bar" style="background: linear-gradient(to right, rgb(0,194,0), rgb(255, 243, 173), rgb(227,13,0));"></div>
-      <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>
-    `,
-    "weighting-existing": `
-      <div id="legend-title">Weighting</div>
-      <div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), #ffffb3, rgb(0,194,0));"></div>
-      <div class="legend-labels"><span>-[]</span><span>0</span><span>[]</span></div>
-    `,
-"weighting-improvements": `
-      <div id="legend-title">Weighting</div>
-      <div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), #ffffb3, rgb(0,194,0));"></div>
-      <div class="legend-labels"><span>-[]</span><span>0</span><span>[]</span></div>
-    `,
-"weighting-change": `
-      <div id="legend-title">Weighting</div>
-      <div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), #ffffb3, rgb(0,194,0));"></div>
-      <div class="legend-labels"><span>-[]</span><span>0</span><span>[]</span></div>
-    `,
-    "unfactored": `
-      <div id="legend-title">Percent Importance</div>
-      <div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), #ffffb3, rgb(0,194,0));"></div>
-      <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>
-    `,
-    "factored": `
-      <div id="legend-title">Percent Importance</div>
-      <div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), #ffffb3, rgb(0,194,0));"></div>
-      <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>
-    `,
-    "difference": `
-      <div id="legend-title">Change in Importance</div>
-      <div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), rgb(255, 243, 173), rgb(0,194,0));"></div>
-      <div class="legend-labels"><span>-[]%</span><span>0%</span><span>[]%</span></div>
-    `,
-"choropleth-change": `
-      <div id="legend-title">Change in Access</div>
-      <div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), rgb(255, 243, 173), rgb(0,194,0));"></div>
-      <div class="legend-labels"><span>-[]%</span><span>0%</span><span>[]%</span></div>
-    `,
-"choropleth-improvements": `
-      <div id="legend-title">Access Percent</div>
-      <div class="gradient-bar" style="background: linear-gradient(to right, rgb(0,194,0), rgb(255, 243, 173), rgb(227,13,0));"></div>
-      <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>
-    `,
-"linkscore-alt": `
-<div id="legend-title">Rider Categories</div>
-<div class="legend-list" style="margin-top: 5px; font-size: 13px;">
-  <div style="display: flex; align-items: center; margin-bottom: 4px;">
-    <div style="width: 20px; height: 10px; background-color: rgb(245,133,5); margin-right: 8px;"></div>
-    <span>Strong and Fearless</span>
-  </div>
-  <div style="display: flex; align-items: center; margin-bottom: 4px;">
-    <div style="width: 20px; height: 10px; background-color: rgb(167,21,193); margin-right: 8px;"></div>
-    <span>Enthused and Confident</span>
-  </div>
-  <div style="display: flex; align-items: center; margin-bottom: 4px;">
-    <div style="width: 20px; height: 10px; background-color: rgb(27,163,254); margin-right: 8px;"></div>
-    <span>Interested but Concerned</span>
-  </div>
-  <div style="display: flex; align-items: center;">
-    <div style="width: 20px; height: 10px; background-color: rgb(0,189,0); margin-right: 8px;"></div>
-    <span>No Way No How</span>
-  </div>
-</div>
-    `
-
-
-  };
-
-  function renderLegend(styleId) {
-    const legendBox = document.getElementById("legend");
-    legendBox.innerHTML = customLegends[styleId] || "<div>No legend available</div>";
-  }
-
-  function renderDescription(groupId) {
-    const box = document.getElementById("description-box");
-    box.innerHTML = descriptions[groupId] || "";
-  }
-
-  // Handle main group changes
-  document.querySelectorAll("input[name='layer-group']").forEach(radio => {
-    radio.addEventListener("change", () => {
-      const id = radio.id;
-
-      // Hide all suboption panels, then show the one for this group (if any)
-      document.querySelectorAll(".suboptions").forEach(el => el.style.display = "none");
-
-      if (id === "link-betweenness") {
-        document.getElementById("betweenness-suboptions").style.display = "block";
-        const subId = document.querySelector("input[name='betweenness-sub']:checked").id;
-        if (styles[subId]) {
-          map.setStyle(styles[subId]);
-          map.once("styledata", () => renderLegend(subId));
-        } else {
-          renderLegend(subId);
-        }
-      } else if (id === "choropleth") {
-        document.getElementById("choropleth-suboptions").style.display = "block";
-        const subId = document.querySelector("input[name='choropleth-sub']:checked").id;
-        if (styles[subId]) {
-          map.setStyle(styles[subId]);
-          map.once("styledata", () => renderLegend(subId));
-        } else {
-          renderLegend(subId);
-        }
-      } else if (id === "link-weighting") {
-        document.getElementById("weighting-suboptions").style.display = "block";
-        const subId = document.querySelector("input[name='weighting-sub']:checked").id;
-        if (styles[subId]) {
-          map.setStyle(styles[subId]);
-          map.once("styledata", () => renderLegend(subId));
-        } else {
-          renderLegend(subId);
-        }
-      } else {
-        // e.g. linkscore-alt — top-level entry with its own style id that matches styles[]
-        if (styles[id]) {
-          map.setStyle(styles[id]);
-          map.once("styledata", () => renderLegend(id));
-        } else {
-          renderLegend(id);
-        }
-      }
-
-      // Update description for the main group (only keys for the 4 headings)
-      renderDescription(id);
+["betweenness-sub","choropleth-sub","weighting-sub"].forEach(groupName=>{
+  document.querySelectorAll(`input[name='${groupName}']`).forEach(radio=>{
+    radio.addEventListener("change",()=>{
+      const subId=radio.id;
+      if(styles[subId]){map.setStyle(styles[subId]); map.once("styledata",()=>renderLegend(subId));}else renderLegend(subId);
     });
   });
+});
 
-  // Handle suboption changes
-  ["betweenness-sub", "choropleth-sub", "weighting-sub"].forEach(groupName => {
-    document.querySelectorAll(`input[name='${groupName}']`).forEach(radio => {
-      radio.addEventListener("change", () => {
-        const subId = radio.id;
-        if (styles[subId]) {
-          map.setStyle(styles[subId]);
-          map.once("styledata", () => renderLegend(subId));
-        } else {
-          renderLegend(subId);
-        }
-      });
-    });
-  });
+document.getElementById("choropleth-suboptions").style.display="block";
+map.once("styledata",()=>{renderLegend("choropleth-existing"); renderDescription("choropleth");});
 
-  // Make sure relevant subpanel is visible for initial state
-  document.getElementById("choropleth-suboptions").style.display = "block";
-
-  // Initial legend + description
-  map.once("styledata", () => {
-    renderLegend("choropleth-existing");
-    renderDescription("choropleth");
-  });
+// Mobile menu toggle
+const menuButton=document.getElementById("menu-button");
+const mapOverlay=document.getElementById("map-overlay");
+menuButton.addEventListener("click",()=>{mapOverlay.style.display=(mapOverlay.style.display==="block")?"none":"block";});
 </script>
 
 </body>
