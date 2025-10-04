@@ -50,19 +50,9 @@ body { margin:0; padding:0; }
 .menu-icon span:nth-child(1){top:0;}
 .menu-icon span:nth-child(2){top:6px;}
 .menu-icon span:nth-child(3){top:12px;}
-
-/* When active (close icon) */
-.menu-icon.active span:nth-child(1){
-  transform:rotate(45deg);
-  top:6px;
-}
-.menu-icon.active span:nth-child(2){
-  opacity:0;
-}
-.menu-icon.active span:nth-child(3){
-  transform:rotate(-45deg);
-  top:6px;
-}
+.menu-icon.active span:nth-child(1){transform:rotate(45deg); top:6px;}
+.menu-icon.active span:nth-child(2){opacity:0;}
+.menu-icon.active span:nth-child(3){transform:rotate(-45deg); top:6px;}
 
 #map-title { font-size:20px; margin:0 0 10px 0; font-weight:bold; }
 #legend { margin-top:10px; font-size:13px; }
@@ -70,14 +60,15 @@ body { margin:0; padding:0; }
 .legend-labels { display:flex; justify-content:space-between; width:200px; font-size:12px; margin-left:0; }
 #style-switcher { margin-top:12px; font-size:14px; }
 #style-switcher strong { display:block; margin-top:6px; }
-#style-switcher label { display:flex; align-items:flex-start; gap:8px; cursor:pointer; margin-bottom:12px; line-height:1.25; }
+#style-switcher label { display:flex; align-items:flex-start; gap:8px; cursor:pointer; margin-bottom:18px; line-height:1.25; }
 #style-switcher input[type="radio"] { margin-top:4px; flex:0 0 auto; width:16px; height:16px; }
 #style-switcher label > span { display:block; flex:1 1 0; }
 #style-switcher label.main-group-label > span { font-weight:bold; font-size:14px; }
 .suboptions { margin-left:28px; margin-top:6px; display:none; }
+.suboptions label { display:flex; align-items:flex-start; gap:8px; line-height:1.25; margin-bottom:10px; }
 .suboptions label > span { font-size:13px; font-weight:normal; }
 
-/* Description box with fixed width and dynamic height */
+/* Description box */
 #description-box {
   position:absolute;
   bottom:10px;
@@ -94,22 +85,35 @@ body { margin:0; padding:0; }
   overflow-wrap:break-word;
   white-space:normal;
   box-shadow:0 2px 8px rgba(0,0,0,0.15);
-  max-height:none; /* allow full height */
 }
-
-/* ensure Mapbox bottom-left controls don't overlap description */
 .mapboxgl-ctrl-bottom-left { display:none; }
 
 /* MOBILE STYLING */
 @media (max-width:768px){
-  #map-overlay{display:none; top:50px; left:10px; right:10px; width:auto; max-width:unset; font-size:14px; z-index:3;}
+  #map-overlay {
+    display:none;
+    top:60px;
+    left:10px;
+    right:10px;
+    width:auto;
+    max-width:unset;
+    font-size:14px;
+    z-index:3;
+    transform: translateY(-10px);
+    opacity:0;
+  }
+  #map-overlay.open {
+    display:block;
+    transform: translateY(0);
+    opacity:1;
+  }
   #menu-button{
     display:flex;
     position:absolute;
     top:10px;
     left:10px;
     z-index:4;
-    background:rgba(255, 255, 255, 0.7); /* white semi-transparent */
+    background:rgba(255,255,255,0.7);
     border:1px solid #999;
     border-radius:5px;
     padding:6px 12px;
@@ -118,10 +122,8 @@ body { margin:0; padding:0; }
     box-shadow:0 2px 6px rgba(0,0,0,0.2);
   }
   #description-box{width:calc(100% - 40px); left:10px; right:30px; bottom:10px; font-size:12px; padding:10px;}
-  #style-switcher{max-height:none; overflow-y:visible;}
-  #map-title{font-size:18px;}
   .legend-labels{font-size:11px;}
-  .suboptions{margin-left:16px; font-size:12px;} /* indent suboptions for mobile */
+  .suboptions{margin-left:16px; font-size:12px;}
 }
 </style>
 </head>
@@ -129,137 +131,174 @@ body { margin:0; padding:0; }
 
 <div id="map"></div>
 
+<!-- MOBILE MENU BUTTON -->
 <button id="menu-button">
-  <span class="menu-icon">
-    <span></span><span></span><span></span>
-  </span>
+  <span class="menu-icon"><span></span><span></span><span></span></span>
   <span class="menu-text">Menu</span>
 </button>
 
+<!-- SIDEBAR -->
 <div id="map-overlay">
   <div id="map-title">Cycling Connectivity Melbourne</div>
   <div id="legend"></div>
   <div id="style-switcher">
     <strong>Choose Layer:</strong>
-    <label class="main-group-label"><input type="radio" name="layer-group" id="link-betweenness"><span>Importance of link to Network</span></label>
+
+    <!-- Group 1 -->
+    <label class="main-group-label"><input type="radio" name="layer-group" value="importance"><span>Importance of link to Network</span></label>
     <div id="betweenness-suboptions" class="suboptions">
       <label><input type="radio" name="betweenness-sub" id="unfactored"><span>Fixed route attributes included only</span></label>
       <label><input type="radio" name="betweenness-sub" id="factored" checked><span>Both fixed and unfixed attributes</span></label>
       <label><input type="radio" name="betweenness-sub" id="difference"><span>Change to importance when unfixed attributes are added</span></label>
     </div>
-    <label class="main-group-label"><input type="radio" name="layer-group" id="choropleth"><span>Access to Ideal Trip Options</span></label>
+
+    <!-- Group 2 -->
+    <label class="main-group-label"><input type="radio" name="layer-group" value="access"><span>Access to Ideal Trip Options</span></label>
     <div id="choropleth-suboptions" class="suboptions">
       <label><input type="radio" name="choropleth-sub" id="choropleth-existing" checked><span>Existing network</span></label>
       <label><input type="radio" name="choropleth-sub" id="choropleth-improvements"><span>With improvements</span></label>
       <label><input type="radio" name="choropleth-sub" id="choropleth-change"><span>Change from improvements</span></label>
     </div>
-    <label class="main-group-label"><input type="radio" name="layer-group" id="link-weighting"><span>Weighting of Link Attributes</span></label>
+
+    <!-- Group 3 -->
+    <label class="main-group-label"><input type="radio" name="layer-group" value="weighting"><span>Weighting of Link Attributes</span></label>
     <div id="weighting-suboptions" class="suboptions">
       <label><input type="radio" name="weighting-sub" id="weighting-existing" checked><span>Existing network</span></label>
       <label><input type="radio" name="weighting-sub" id="weighting-improvements"><span>With improvements</span></label>
       <label><input type="radio" name="weighting-sub" id="weighting-change"><span>Change from improvements</span></label>
     </div>
-    <label class="main-group-label"><input type="radio" name="layer-group" id="linkscore-alt"><span>Cyclists Types and where they are comfortable cycling</span></label>
+
+    <!-- Group 4 -->
+    <label class="main-group-label"><input type="radio" name="layer-group" value="riderTypes"><span>Cyclists Types and where they are comfortable cycling</span></label>
+    <div id="rider-suboptions" class="suboptions">
+      <label><input type="checkbox" name="riderType" value="rider_strong" checked><span>Strong and Fearless</span></label>
+      <label><input type="checkbox" name="riderType" value="rider_confident" checked><span>Enthused and Confident</span></label>
+      <label><input type="checkbox" name="riderType" value="rider_concerned" checked><span>Interested but Concerned</span></label>
+      <label><input type="checkbox" name="riderType" value="rider_noway" checked><span>No Way No How</span></label>
+    </div>
   </div>
 </div>
 
-<div id="description-box"></div>
+<div id="description-box"><strong>About:</strong> This dashboard visualises bicycle network connectivity across Melbourne.</div>
 
 <script>
-mapboxgl.accessToken = 'pk.eyJ1IjoiYm1lbiIsImEiOiJjbWZtMGQwc28wMmJlMnFvZWNjaXY5eW03In0.Su60i1Xyh3ejDhmiJf2NCg';
+mapboxgl.accessToken='pk.eyJ1IjoiYm1lbiIsImEiOiJjbWZtMGQwc28wMmJlMnFvZWNjaXY5eW03In0.Su60i1Xyh3ejDhmiJf2NCg';
 
 const styles = {
-  'choropleth-existing':'mapbox://styles/bmen/cmfb3otgq004001ss00ri10ue',
-  'choropleth-improvements':'',
-  'choropleth-change':'',
-  'weighting-existing':'mapbox://styles/bmen/cmfb2vrn5004901su3rwl75xl',
-  'weighting-improvements':'',
-  'weighting-change':'',
-  unfactored:'mapbox://styles/bmen/cmfl094g4003601sjb3cw8axe',
-  factored:'mapbox://styles/bmen/cmfl1v5qj006s01sr4g7uhiu9',
-  difference:'mapbox://styles/bmen/cmfl1xxvg006t01srbsulf23b',
-  'linkscore-alt':'mapbox://styles/bmen/cmg5115hg00cp01sm55538y1r'
-};
-
-const descriptions = {
-  "link-betweenness":"<b>Importance of Link in Cycling Network</b> quantifies how frequently a link (segment of street or path) is on a shortest path, and therefore how important of a role it plays in providing connectivity for the whole network.",
-  "choropleth":"<b>Access to ideal trip options</b> quantifies the average ease to which a rider within a given area can access a direct and quality (comfortable to ride on) bike path.",
-  "link-weighting":"Each link (segment of street or path) has been <b>weighted based on it's attributes</b>. These include <b>fixed</b> attributes such as slope, and <b>unfixed</b> attributes such as degree of bike lane protected-ness. The weighting is applied to each link to quantify the effects of positive and negative attributes within the shortest path algorithm. This is to gain a better measure of connectivity from the algorithm.",
-  "linkscore-alt":"Different Cyclists feel only feel <b>comfortable cycling in particular environements</b>. The range that a cyclists is willing to go is mapped based on their <b>level of confidence</b>."
+  'choropleth-existing': 'mapbox://styles/bmen/cmfb3otgq004001ss00ri10ue',
+  'choropleth-improvements': '',
+  'choropleth-change': '',
+  'weighting-existing': 'mapbox://styles/bmen/cmfb2vrn5004901su3rwl75xl',
+  'weighting-improvements': '',
+  'weighting-change': '',
+  'unfactored': 'mapbox://styles/bmen/cmfl094g4003601sjb3cw8axe',
+  'factored': 'mapbox://styles/bmen/cmfl1v5qj006s01sr4g7uhiu9',
+  'difference': 'mapbox://styles/bmen/cmfl1xxvg006t01srbsulf23b',
+  'linkscore-alt': 'mapbox://styles/bmen/cmgcap1iz004g01re8jyr5e6c'
 };
 
 const customLegends = {
-  "choropleth-existing":`<div id="legend-title">Access Percent</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(0,194,0), rgb(255,243,173), rgb(227,13,0));"></div><div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
-  "weighting-existing":`<div id="legend-title">Weighting</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), #ffffb3, rgb(0,194,0));"></div><div class="legend-labels"><span>-[]</span><span>0</span><span>[]</span></div>`,
-  unfactored:`<div id="legend-title">Percent Importance</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), #ffffb3, rgb(0,194,0));"></div><div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
-  factored:`<div id="legend-title">Percent Importance</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), #ffffb3, rgb(0,194,0));"></div><div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
-  difference:`<div id="legend-title">Change in Importance</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), rgb(255,243,173), rgb(0,194,0));"></div><div class="legend-labels"><span>-[]%</span><span>0%</span><span>[]%</span></div>`,
-  "choropleth-improvements":`<div id="legend-title">Access Percent</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(0,194,0), rgb(255,243,173), rgb(227,13,0));"></div><div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
-  "choropleth-change":`<div id="legend-title">Change in Access</div><div class="gradient-bar" style="background: linear-gradient(to right, rgb(255,13,0), rgb(255,243,173), rgb(0,194,0));"></div><div class="legend-labels"><span>-[]%</span><span>0%</span><span>[]%</span></div>`,
-  "linkscore-alt":`<div id="legend-title">Rider Categories</div>
-  <div class="legend-list" style="margin-top:5px;font-size:13px;">
-    <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(245,133,5);margin-right:8px;"></div><span>Strong and Fearless</span></div>
-    <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(167,21,193);margin-right:8px;"></div><span>Enthused and Confident</span></div>
-    <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(27,163,254);margin-right:8px;"></div><span>Interested but Concerned</span></div>
-    <div style="display:flex;align-items:center;"><div style="width:20px;height:10px;background-color:rgb(0,189,0);margin-right:8px;"></div><span>No Way No How</span></div>
-  </div>`
+  "choropleth-existing": `<div id="legend-title">Percent Access</div>
+    <div class="gradient-bar" style="background:linear-gradient(to right,rgb(0,194,0),rgb(255,243,173),rgb(227,13,0));"></div>
+    <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
+  "weighting-existing": `<div id="legend-title">Weighting</div>
+    <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
+    <div class="legend-labels"><span>-[]</span><span>0</span><span>[]</span></div>`,
+  "unfactored": `<div id="legend-title">Percent Importance</div>
+    <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
+    <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
+  "factored": `<div id="legend-title">Percent Importance</div>
+    <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
+    <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
+  "difference": `<div id="legend-title">Change in Importance</div>
+    <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),rgb(255,243,173),rgb(0,194,0));"></div>
+    <div class="legend-labels"><span>-[]</span><span>0</span><span>[]</span></div>`,
+  "linkscore-alt": `<div id="legend-title">Rider Types</div>
+    <div style="margin-top:5px;font-size:13px;">
+      <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(245,133,5);margin-right:8px;"></div><span>Strong and Fearless</span></div>
+      <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(167,21,193);margin-right:8px;"></div><span>Enthused and Confident</span></div>
+      <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(27,163,254);margin-right:8px;"></div><span>Interested but Concerned</span></div>
+      <div style="display:flex;align-items:center;"><div style="width:20px;height:10px;background-color:rgb(0,189,0);margin-right:8px;"></div><span>No Way No How</span></div>
+    </div>`
+};
+
+const descriptions = {
+  importance: "<b>Importance of Link in Cycling Network</b> quantifies how frequently a link is on a shortest path and therefore how important it is for connectivity.",
+  access: "<b>Access to ideal trip options</b> quantifies how easily a rider in an area can access a direct, comfortable bike path.",
+  weighting: "Each link has been <b>weighted by attributes</b>. Weighting shows how attributes affect shortest-path connectivity.",
+  riderTypes: "Different riders feel comfortable in different environments; these four categories map rider comfort/confidence levels."
+};
+
+const riderLayers = {
+  strong: 'rider_strong',
+  confident: 'rider_confident',
+  concerned: 'rider_concerned',
+  noway: 'rider_noway'
 };
 
 const map = new mapboxgl.Map({
-  container:'map',
-  style:styles['choropleth-existing'],
-  center:[144.9631,-37.8136],
-  zoom:12
+  container: 'map',
+  style: styles['factored'],
+  center: [144.9631, -37.8136],
+  zoom: 12.5
 });
-map.addControl(new mapboxgl.NavigationControl({visualizePitch:true}),'top-right');
-map.addControl(new mapboxgl.ScaleControl({maxWidth:200,unit:'metric'}),'bottom-right');
+map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
+map.addControl(new mapboxgl.ScaleControl({ maxWidth: 200, unit: 'metric' }), 'bottom-right');
 
-function renderLegend(styleId){document.getElementById("legend").innerHTML=customLegends[styleId]||"<div>No legend available</div>";}
-function renderDescription(groupId){document.getElementById("description-box").innerHTML=descriptions[groupId]||"";}
+function renderLegend(key){ document.getElementById('legend').innerHTML = customLegends[key] || ""; }
+function renderDescription(group){ document.getElementById('description-box').innerHTML = `<strong>About:</strong> ${descriptions[group]||''}`; }
 
-document.querySelectorAll("input[name='layer-group']").forEach(radio=>{
-  radio.addEventListener("change",()=>{
-    const id=radio.id;
-    document.querySelectorAll(".suboptions").forEach(el=>el.style.display="none");
-    if(id==="link-betweenness"){document.getElementById("betweenness-suboptions").style.display="block"; const subId=document.querySelector("input[name='betweenness-sub']:checked").id; if(styles[subId]){map.setStyle(styles[subId]); map.once("styledata",()=>renderLegend(subId));}else renderLegend(subId);}
-    else if(id==="choropleth"){document.getElementById("choropleth-suboptions").style.display="block"; const subId=document.querySelector("input[name='choropleth-sub']:checked").id; if(styles[subId]){map.setStyle(styles[subId]); map.once("styledata",()=>renderLegend(subId));}else renderLegend(subId);}
-    else if(id==="link-weighting"){document.getElementById("weighting-suboptions").style.display="block"; const subId=document.querySelector("input[name='weighting-sub']:checked").id; if(styles[subId]){map.setStyle(styles[subId]); map.once("styledata",()=>renderLegend(subId));}else renderLegend(subId);}
-    else{if(styles[id]){map.setStyle(styles[id]); map.once("styledata",()=>renderLegend(id));}else renderLegend(id);}
-    renderDescription(id);
-  });
-});
-
-["betweenness-sub","choropleth-sub","weighting-sub"].forEach(groupName=>{
-  document.querySelectorAll(`input[name='${groupName}']`).forEach(radio=>{
-    radio.addEventListener("change",()=>{
-      const subId=radio.id;
-      if(styles[subId]){map.setStyle(styles[subId]); map.once("styledata",()=>renderLegend(subId));}else renderLegend(subId);
+function setMapStyleByKey(key){
+  if(!styles[key])return;
+  map.setStyle(styles[key]);
+  map.once('styledata',()=>{ renderLegend(key); if(key==='linkscore-alt') attachRiderToggles(); });
+}
+function attachRiderToggles(){
+  document.querySelectorAll('input[name="riderType"]').forEach(cb=>{
+    cb.addEventListener('change',e=>{
+      const id=e.target.value;
+      if(map.getLayer(id)) map.setLayoutProperty(id,'visibility',e.target.checked?'visible':'none');
     });
+    const id=cb.value;
+    if(map.getLayer(id)) map.setLayoutProperty(id,'visibility',cb.checked?'visible':'none');
+  });
+}
+function showSubpanel(g){
+  document.querySelectorAll('.suboptions').forEach(s=>s.style.display='none');
+  if(g==='importance')document.getElementById('betweenness-suboptions').style.display='block';
+  if(g==='access')document.getElementById('choropleth-suboptions').style.display='block';
+  if(g==='weighting')document.getElementById('weighting-suboptions').style.display='block';
+  if(g==='riderTypes')document.getElementById('rider-suboptions').style.display='block';
+}
+document.querySelectorAll('input[name="layer-group"]').forEach(r=>{
+  r.addEventListener('change',e=>{
+    const g=e.target.value;
+    showSubpanel(g);
+    renderDescription(g);
+    if(g==='importance')setMapStyleByKey(document.querySelector("input[name='betweenness-sub']:checked").id);
+    if(g==='access')setMapStyleByKey(document.querySelector("input[name='choropleth-sub']:checked").id);
+    if(g==='weighting')setMapStyleByKey(document.querySelector("input[name='weighting-sub']:checked").id);
+    if(g==='riderTypes')setMapStyleByKey('linkscore-alt');
   });
 });
+document.querySelectorAll("input[name='betweenness-sub'],input[name='choropleth-sub'],input[name='weighting-sub']")
+  .forEach(r=>r.addEventListener('change',()=>setMapStyleByKey(r.id)));
 
-document.getElementById("choropleth-suboptions").style.display="block";
-map.once("styledata",()=>{renderLegend("choropleth-existing"); renderDescription("choropleth");});
+map.once('styledata',()=>renderLegend('factored'));
+renderDescription('importance');
+showSubpanel('importance');
 
-// Mobile menu toggle
-const menuButton=document.getElementById("menu-button");
-const mapOverlay=document.getElementById("map-overlay");
-const menuIcon=document.querySelector(".menu-icon");
-const menuText=document.querySelector(".menu-text");
-
-menuButton.addEventListener("click",()=>{
-  const isOpen = mapOverlay.style.display==="block";
-  if(isOpen){
-    mapOverlay.style.display="none";
-    menuIcon.classList.remove("active");
-    menuText.textContent="Menu";
-  }else{
-    mapOverlay.style.display="block";
-    menuIcon.classList.add("active");
-    menuText.textContent="Close";
-  }
+/* ---------- MOBILE MENU TOGGLE ---------- */
+const menuBtn=document.getElementById('menu-button');
+const overlay=document.getElementById('map-overlay');
+const icon=menuBtn.querySelector('.menu-icon');
+const text=menuBtn.querySelector('.menu-text');
+menuBtn.addEventListener('click',()=>{
+  overlay.classList.toggle('open');
+  const isOpen=overlay.classList.contains('open');
+  icon.classList.toggle('active',isOpen);
+  text.textContent=isOpen?'Close':'Menu';
 });
 </script>
-
 </body>
 </html>
