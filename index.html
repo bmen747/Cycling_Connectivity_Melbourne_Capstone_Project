@@ -20,7 +20,7 @@ body { margin:0; padding:0; }
   font-family:"DIN Pro","Arial",sans-serif;
   color:black;
   z-index:2;
-  max-width:300px;
+  max-width:270px;
   box-shadow:0 2px 8px rgba(0,0,0,0.15);
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
@@ -186,13 +186,13 @@ mapboxgl.accessToken='pk.eyJ1IjoiYm1lbiIsImEiOiJjbWZtMGQwc28wMmJlMnFvZWNjaXY5eW0
 
 const styles = {
   'choropleth-existing': 'mapbox://styles/bmen/cmfb3otgq004001ss00ri10ue', /* ---------- FINAL ---------- */
-  'choropleth-improvements': 'mapbox://styles/bmen/cmfb3otgq004001ss00ri10ue', /* ---------- PLACEHOLDER ---------- */
-  'choropleth-change': 'mapbox://styles/bmen/cmfb3otgq004001ss00ri10ue', /* ---------- PLACEHOLDER ---------- */
+  'choropleth-improvements': 'mapbox://styles/bmen/cmgxn63s0006201st9lkg9o94', /* ---------- FINAL ---------- */
+  'choropleth-change': 'mapbox://styles/bmen/cmgybnuyu007701srhnmkbszd', /* ---------- FINAL ---------- */
   'weighting-existing': 'mapbox://styles/bmen/cmgulnyh9002d01r5bt6x5k71', /* ---------- FINAL ---------- */
   'weighting-improvements': 'mapbox://styles/bmen/cmgukkhik002q01sr1u8j0bqh', /* ---------- FINAL ---------- */
   'weighting-change': 'mapbox://styles/bmen/cmgue4s9c001y01r502n92t05', /* ---------- FINAL ---------- */
   'unfactored': 'mapbox://styles/bmen/cmgvgr5pj004001t1afeo8sqa', /* ---------- FINAL ---------- */
-  'factored': 'mapbox://styles/bmen/cmgvnyosh003r01stgrll4y99', /* ---------- FINAL ---------- */
+  'factored': 'mapbox://styles/bmen/cmgvnyosh003r01stgrll4y99', /* ---------- IN PROGRESS ---------- */
   'difference': 'mapbox://styles/bmen/cmfl1xxvg006t01srbsulf23b', /* ---------- PLACEHOLDER ---------- */
   'linkscore-alt': 'mapbox://styles/bmen/cmgcap1iz004g01re8jyr5e6c'/* ---------- FINAL ---------- */
 };
@@ -205,8 +205,8 @@ const customLegends = {
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
     <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
   "choropleth-change": `<div id="legend-title">Change in Access</div>
-    <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),rgb(255,243,173),rgb(0,194,0));"></div>
-    <div class="legend-labels"><span>-100%</span><span>0%</span><span>100%</span></div>`,
+    <div class="gradient-bar" style="background:linear-gradient(to right,hsl(64,97%,84%),rgb(24,170,82));"></div>
+    <div class="legend-labels"><span>+0%</span><span></span><span>+100%</span></div>`,
   "weighting-existing": `<div id="legend-title"> Relative Weighting</div>
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
     <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
@@ -214,7 +214,7 @@ const customLegends = {
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
     <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
   "weighting-change": `<div id="legend-title">Weighting Improvement from Changes</div>
-    <div class="gradient-bar" style="background:linear-gradient(to right,rgb(192,232,188),rgb(24,170,82));"></div>
+    <div class="gradient-bar" style="background:linear-gradient(to right,hsl(76, 82%, 70%),rgb(24,170,82));"></div>
     <div class="legend-labels"><span>+0%</span><span></span><span>+100%</span></div>`,
   "unfactored": `<div id="legend-title">Percent Importance</div>
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
@@ -250,7 +250,7 @@ const riderLayers = {
 
 const map = new mapboxgl.Map({
   container: 'map',
-  style: styles['factored'],
+  style: styles['unfactored'],
   center: [144.9631, -37.8136],
   zoom: 12.5
 });
