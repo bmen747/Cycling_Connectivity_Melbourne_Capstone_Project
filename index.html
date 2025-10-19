@@ -145,11 +145,11 @@ body { margin:0; padding:0; }
     <strong>Choose Layer:</strong>
 
     <!-- Group 1 -->
-    <label class="main-group-label"><input type="radio" name="layer-group" value="importance"><span>Importance of link to Network</span></label>
+    <label class="main-group-label"><input type="radio" name="layer-group" value="importance" checked><span>Importance of link to Network</span></label>
     <div id="betweenness-suboptions" class="suboptions">
-      <label><input type="radio" name="betweenness-sub" id="unfactored"><span>Fixed route attributes included only</span></label>
-      <label><input type="radio" name="betweenness-sub" id="factored" checked><span>Both fixed and unfixed attributes</span></label>
-      <label><input type="radio" name="betweenness-sub" id="difference"><span>Change to importance when unfixed attributes are added</span></label>
+      <label><input type="radio" name="betweenness-sub" id="unfactored" checked><span>Existing network</span></label>
+      <label><input type="radio" name="betweenness-sub" id="factored"><span>Change to link importance when infrastructure is considered</span></label>
+      <label><input type="radio" name="betweenness-sub" id="difference"><span>Change to link importance when upgrade are applied</span></label>
     </div>
 
     <!-- Group 2 -->
@@ -171,10 +171,10 @@ body { margin:0; padding:0; }
     <!-- Group 4 -->
     <label class="main-group-label"><input type="radio" name="layer-group" value="riderTypes"><span>Cyclists Types and where they are comfortable cycling</span></label>
     <div id="rider-suboptions" class="suboptions">
-      <label><input type="checkbox" name="riderType" value="rider_strong" checked><span>Strong and Fearless</span></label>
-      <label><input type="checkbox" name="riderType" value="rider_confident" checked><span>Enthused and Confident</span></label>
-      <label><input type="checkbox" name="riderType" value="rider_concerned" checked><span>Interested but Concerned</span></label>
-      <label><input type="checkbox" name="riderType" value="rider_noway" checked><span>No Way No How</span></label>
+      <label><input type="checkbox" name="riderType" value="rider_strong" checked><span><div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(245,133,5);margin-right:8px;"></div><span>Strong and Fearless</span></div></span></label>
+      <label><input type="checkbox" name="riderType" value="rider_confident" checked><span><div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(167,21,193);margin-right:8px;"></div><span>Enthused and Confident</span></div></span></label>
+      <label><input type="checkbox" name="riderType" value="rider_concerned" checked><span><div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(27,163,254);margin-right:8px;"></div><span>Interested but Concerned</span></div></span></label>
+      <label><input type="checkbox" name="riderType" value="rider_noway" checked><span><div style="display:flex;align-items:center;"><div style="width:20px;height:10px;background-color:rgb(0,189,0);margin-right:8px;"></div><span>No Way No How</span></div></span></label>
     </div>
   </div>
 </div>
@@ -191,8 +191,8 @@ const styles = {
   'weighting-existing': 'mapbox://styles/bmen/cmgulnyh9002d01r5bt6x5k71', /* ---------- FINAL ---------- */
   'weighting-improvements': 'mapbox://styles/bmen/cmgukkhik002q01sr1u8j0bqh', /* ---------- FINAL ---------- */
   'weighting-change': 'mapbox://styles/bmen/cmgue4s9c001y01r502n92t05', /* ---------- FINAL ---------- */
-  'unfactored': 'mapbox://styles/bmen/cmfl094g4003601sjb3cw8axe', /* ---------- PLACEHOLDER ---------- */
-  'factored': 'mapbox://styles/bmen/cmfl1v5qj006s01sr4g7uhiu9', /* ---------- PLACEHOLDER ---------- */
+  'unfactored': 'mapbox://styles/bmen/cmgvgr5pj004001t1afeo8sqa', /* ---------- FINAL ---------- */
+  'factored': 'mapbox://styles/bmen/cmgvnyosh003r01stgrll4y99', /* ---------- FINAL ---------- */
   'difference': 'mapbox://styles/bmen/cmfl1xxvg006t01srbsulf23b', /* ---------- PLACEHOLDER ---------- */
   'linkscore-alt': 'mapbox://styles/bmen/cmgcap1iz004g01re8jyr5e6c'/* ---------- FINAL ---------- */
 };
@@ -206,7 +206,7 @@ const customLegends = {
     <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
   "choropleth-change": `<div id="legend-title">Change in Access</div>
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),rgb(255,243,173),rgb(0,194,0));"></div>
-    <div class="legend-labels"><span>- []</span><span>0</span><span>[]</span></div>`,
+    <div class="legend-labels"><span>-100%</span><span>0%</span><span>100%</span></div>`,
   "weighting-existing": `<div id="legend-title"> Relative Weighting</div>
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
     <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
@@ -221,16 +221,12 @@ const customLegends = {
     <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
   "factored": `<div id="legend-title">Percent Importance</div>
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
-    <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
+    <div class="legend-labels"><span>-100%</span><span>0%</span><span>100%</span></div>`,
   "difference": `<div id="legend-title">Change in Importance</div>
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),rgb(255,243,173),rgb(0,194,0));"></div>
-    <div class="legend-labels"><span>-[]</span><span>0</span><span>[]</span></div>`,
-  "linkscore-alt": `<div id="legend-title">Rider Types</div>
-    <div style="margin-top:5px;font-size:13px;">
-      <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(245,133,5);margin-right:8px;"></div><span>Strong and Fearless</span></div>
-      <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(167,21,193);margin-right:8px;"></div><span>Enthused and Confident</span></div>
-      <div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(27,163,254);margin-right:8px;"></div><span>Interested but Concerned</span></div>
-      <div style="display:flex;align-items:center;"><div style="width:20px;height:10px;background-color:rgb(0,189,0);margin-right:8px;"></div><span>No Way No How</span></div>
+    <div class="legend-labels"><span>-100%</span><span>0%</span><span>100%</span></div>`,
+  "linkscore-alt": `<div id="legend-title"></div>
+    <div style="margin-top:0px;font-size:10px;">
     </div>`
 };
 
