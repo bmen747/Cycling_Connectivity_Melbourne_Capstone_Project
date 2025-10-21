@@ -20,7 +20,7 @@ body { margin:0; padding:0; }
   font-family:"DIN Pro","Arial",sans-serif;
   color:black;
   z-index:2;
-  max-width:270px;
+  max-width:285px;
   box-shadow:0 2px 8px rgba(0,0,0,0.15);
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
@@ -145,27 +145,27 @@ body { margin:0; padding:0; }
     <strong>Choose Layer:</strong>
 
     <!-- Group 1 -->
-    <label class="main-group-label"><input type="radio" name="layer-group" value="importance" checked><span>Importance of link to Network</span></label>
+    <label class="main-group-label"><input type="radio" name="layer-group" value="importance" checked><span>Importance of Link to Network</span></label>
     <div id="betweenness-suboptions" class="suboptions">
-      <label><input type="radio" name="betweenness-sub" id="unfactored" checked><span>Existing network</span></label>
-      <label><input type="radio" name="betweenness-sub" id="factored"><span>Change to link importance when infrastructure is considered</span></label>
-      <label><input type="radio" name="betweenness-sub" id="difference"><span>Change to link importance when upgrade are applied</span></label>
+      <label><input type="radio" name="betweenness-sub" id="unfactored" checked><span>Existing Network</span></label>
+      <label><input type="radio" name="betweenness-sub" id="factored"><span>Impact of Infrastructure</span></label>
+      <label><input type="radio" name="betweenness-sub" id="difference"><span>Impact of Upgrades</span></label>
     </div>
 
     <!-- Group 2 -->
     <label class="main-group-label"><input type="radio" name="layer-group" value="access"><span>Access to Ideal Trip Options</span></label>
     <div id="choropleth-suboptions" class="suboptions">
-      <label><input type="radio" name="choropleth-sub" id="choropleth-existing" checked><span>Existing network</span></label>
-      <label><input type="radio" name="choropleth-sub" id="choropleth-improvements"><span>With improvements</span></label>
-      <label><input type="radio" name="choropleth-sub" id="choropleth-change"><span>Change from improvements</span></label>
+      <label><input type="radio" name="choropleth-sub" id="choropleth-existing" checked><span>Existing Network</span></label>
+      <label><input type="radio" name="choropleth-sub" id="choropleth-improvements"><span>Upgraded Network</span></label>
+      <label><input type="radio" name="choropleth-sub" id="choropleth-change"><span>Impact of Upgrades</span></label>
     </div>
 
     <!-- Group 3 -->
     <label class="main-group-label"><input type="radio" name="layer-group" value="weighting"><span>Weighting of Link Attributes</span></label>
     <div id="weighting-suboptions" class="suboptions">
-      <label><input type="radio" name="weighting-sub" id="weighting-existing" checked><span>Existing network</span></label>
-      <label><input type="radio" name="weighting-sub" id="weighting-improvements"><span>With improvements</span></label>
-      <label><input type="radio" name="weighting-sub" id="weighting-change"><span>Change from improvements</span></label>
+      <label><input type="radio" name="weighting-sub" id="weighting-existing" checked><span>Existing Network</span></label>
+      <label><input type="radio" name="weighting-sub" id="weighting-improvements"><span>Upgraded Network</span></label>
+      <label><input type="radio" name="weighting-sub" id="weighting-change"><span>Impact of Upgrades</span></label>
     </div>
 
     <!-- Group 4 -->
@@ -174,12 +174,12 @@ body { margin:0; padding:0; }
       <label><input type="checkbox" name="riderType" value="rider_strong" checked><span><div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(245,133,5);margin-right:8px;"></div><span>Strong and Fearless</span></div></span></label>
       <label><input type="checkbox" name="riderType" value="rider_confident" checked><span><div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(167,21,193);margin-right:8px;"></div><span>Enthused and Confident</span></div></span></label>
       <label><input type="checkbox" name="riderType" value="rider_concerned" checked><span><div style="display:flex;align-items:center;margin-bottom:4px;"><div style="width:20px;height:10px;background-color:rgb(27,163,254);margin-right:8px;"></div><span>Interested but Concerned</span></div></span></label>
-      <label><input type="checkbox" name="riderType" value="rider_noway" checked><span><div style="display:flex;align-items:center;"><div style="width:20px;height:10px;background-color:rgb(0,189,0);margin-right:8px;"></div><span>No Way No How</span></div></span></label>
+      <label><input type="checkbox" name="riderType" value="rider_noway" checked><span><div style="display:flex;align-items:center;"><div style="width:20px;height:10px;background-color:rgb(0,189,0);margin-right:8px;"></div><span>Uncomfortable and Uninterested</span></div></span></label>
     </div>
   </div>
 </div>
 
-<div id="description-box"><strong>About:</strong> This dashboard visualises bicycle network connectivity across Melbourne.</div>
+<div id="description-box"><strong></strong> This dashboard visualises bicycle network connectivity across Melbourne.</div>
 
 <script>
 mapboxgl.accessToken='pk.eyJ1IjoiYm1lbiIsImEiOiJjbWZtMGQwc28wMmJlMnFvZWNjaXY5eW03In0.Su60i1Xyh3ejDhmiJf2NCg';
@@ -201,7 +201,7 @@ const customLegends = {
   "choropleth-existing": `<div id="legend-title">Relative Access</div>
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
     <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
-  "choropleth-improvements": `<div id="legend-title">Percent Access</div>
+  "choropleth-improvements": `<div id="legend-title">Relative Access</div>
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
     <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
   "choropleth-change": `<div id="legend-title">Change in Access</div>
@@ -219,7 +219,7 @@ const customLegends = {
   "unfactored": `<div id="legend-title">Percent Importance</div>
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
     <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>`,
-  "factored": `<div id="legend-title">Percent Importance</div>
+  "factored": `<div id="legend-title">Change in Importance</div>
     <div class="gradient-bar" style="background:linear-gradient(to right,rgb(255,13,0),#ffffb3,rgb(0,194,0));"></div>
     <div class="legend-labels"><span>-100%</span><span>0%</span><span>100%</span></div>`,
   "difference": `<div id="legend-title">Change in Importance</div>
@@ -231,14 +231,14 @@ const customLegends = {
 };
 
 const descriptions = {
-  importance: "<b>Importance of Link in Cycling Network</b> quantifies how frequently a link (segment of street or path) is on a shortest path, and therefore how important of a role it plays in providing connectivity for the whole network.",
-  access: "<b>Access to ideal trip options</b> quantifies the average ease to which a rider within a given area can access a direct and quality (comfortable to ride on) bike path.",
-  weighting: "Each link (segment of street or path) has been <b>weighted based on it's attributes</b>. These include <b>fixed</b> attributes such as slope, and <b>unfixed</b> attributes such as degree of bike lane protected-ness. The weighting is applied to each link to quantify the effects of positive and negative attributes within the shortest path algorithm. This is to gain a better measure of connectivity from the algorithm.",
-  riderTypes: `Different Cyclists feel only feel <b>comfortable cycling in particular environements</b>. The range that a cyclists is willing to go is mapped based on their <b>level of confidence</b>. These 4 levels are:<br>
+  importance: "<b>Importance of Link in Cycling Network</b> quantifies how frequently a link (segment of street or path) is on a shortest path, and therefore how important of a role it plays in providing connectivity.",
+  access: "<b>Access to ideal trip options</b> quantifies the ease to which a rider within a given area can access a direct and quality (comfortable to ride on) bike path or on road option.",
+  weighting: "Each link (segment of street or path) has been <b>weighted based on it's attributes</b> such as bike accommodation, road speed and no. of lanes, slope and pavement type. The weighting is applied to each link to quantify the effects of attributes within the shortest path algorithm on route choices.",
+  riderTypes: `Different Cyclists feel only feel <b>comfortable cycling in particular environments</b>. The range that a cyclist is willing to go is mapped based on their <b>level of confidence</b>. These 4 levels are:<br>
 1. <u>Strong and Fearless</u> (4% of people): willing to bicycle under any traffic conditions,<br>
 2. <u>Enthused and Confident</u> (9% of people): comfortable with minimal bicycle accommodations,<br>
 3. <u>Interested but Concerned</u> (56% of people): uncomfortable with high vehicle speeds and volume,<br>
-4. <u>No Way No How</u> (31% of people): not interested in bicycling.`
+4. <u>No Way No How</u> (31% of people): not interested in cycling without fantastic accommodation."`
 };
 
 const riderLayers = {
@@ -258,7 +258,7 @@ map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-ri
 map.addControl(new mapboxgl.ScaleControl({ maxWidth: 200, unit: 'metric' }), 'bottom-right');
 
 function renderLegend(key){ document.getElementById('legend').innerHTML = customLegends[key] || ""; }
-function renderDescription(group){ document.getElementById('description-box').innerHTML = `<strong>About:</strong> ${descriptions[group]||''}`; }
+function renderDescription(group){ document.getElementById('description-box').innerHTML = `<strong></strong> ${descriptions[group]||''}`; }
 
 function setMapStyleByKey(key){
   if(!styles[key])return;
