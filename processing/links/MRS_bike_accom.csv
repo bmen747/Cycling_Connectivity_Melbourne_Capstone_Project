@@ -1,9 +1,42 @@
 key,value
-intermittent/informal (on-road),1
-shared bike/parking lane,1
-shared street (sharrows),1
-basic painted lane,2
-buffered painted lane,2
-protected bike lane (on-road),3
-separated path (off-road),4
-shared use path (off-road),4
+no,1
+lane,2
+shared_lane,1
+yes,2
+track,4
+designated,2
+shared_laneshared_lane,1
+nono,1
+use_sidepath,4
+separate,3
+dismount,1
+shoulder,1
+opposite,1
+permissive,1
+opposite_lane,1
+crossing,1
+private,1
+share_busway,2
+optional_sidepath,4
+shared,1
+nof,1
+both,2
+laneno,1
+*,1
+traffic_island,1
+destination,1
+sidewalk,1
+aslno,1
+link,1
+use_sidepathno,1
+sharedshared_lane,1
+use_sidepathlane,1
+proposed,1
+laneshare_parking,1
+advisory,1
+shared_laneno,1
+unknown,1
+unmarked,1
+asllane,1
+asl,1
+official,2
