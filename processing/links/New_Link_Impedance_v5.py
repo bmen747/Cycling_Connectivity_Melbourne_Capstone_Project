@@ -9,9 +9,6 @@ FOLDER_PATH = Path(r'C:\Users\kioso\OneDrive - The University of Melbourne\Files
 FILE_MRS_LINKS = FOLDER_PATH / r'MRS_Links.1.csv'
 FILE_MRS_BIKE_ACCOM = FOLDER_PATH / r'MRS_bike_accom.csv'
 FILE_MRS_ROAD_CLASS = FOLDER_PATH / r'MRS_road_classes.csv'
-FILE_DESTINATIONS = FOLDER_PATH / r'DZNs_30.csv'
-FILE_ORIGINS_1 = FOLDER_PATH / r'SA1s_30.csv'
-FILE_ORIGINS_2 = FOLDER_PATH / r'SA1s_30.csv'
 FILE_IN_LINKS = FOLDER_PATH / r'data_links.csv'
 FILE_OUT_LINKS = FOLDER_PATH / r'data_links_updated.csv'
 
@@ -19,20 +16,6 @@ def clean_string(s):
     if not isinstance(s, str):
         s = str(s)
     return s.strip().replace('\ufeff', '').replace('\r', '').replace('\n', '')
-
-def FW_Penalty(infra_type):
-    return 100 if str(infra_type).strip() == '0' else 0
-
-def road_seal_penalty(road_seal_value):
-    return 0.57 if '2' in str(road_seal_value) else 0.0
-
-def hazard_penalty(cy2_hazards_value):
-    """
-    Apply hazard penalty only when 'Parking' appears in CY2_Hazards.
-    Case-insensitive match.
-    """
-    value = str(cy2_hazards_value).lower()
-    return 0.56 if 'parking' in value else 0.0
 
 def class_code_to_link_lanes(infra_type):
     mapping = {
@@ -102,7 +85,7 @@ def add_f_roadway_to_Data_Links_Rev3(mrs_links_index, f_bikeaccom_index, f_road_
     filtered_rows_count = 0
     defaulted_linklanes_count = 0
     defaulted_speed_count = 0
-    lanes_override_count = 0
+    defaulted_slope_count = 0
     speed_override_count = 0
 
     with open(input_file, newline='', encoding='utf-8-sig') as fin, \
@@ -123,86 +106,56 @@ def add_f_roadway_to_Data_Links_Rev3(mrs_links_index, f_bikeaccom_index, f_road_
 
         for row in reader:
             total_rows += 1
+            if (total_rows > 999 and  total_rows // 1000 == 0):
+                print(f"Processed {total_rows} rows")
             row = {clean_string(k): clean_string(v) for k, v in row.items()}
 
-            if row.get('CLASS_CODE', '').strip() == '0':
-                continue
-
-            class_code = int(row.get('CLASS_CODE', '').strip())
-
-            # Override CY2_InfraType for CLASS_CODE 1 or 2
-
-            #if class_code in ['1', '2']:
-            #    row['CY2_InfraType'] = "Protected bike lane (on-road)"
-            #    print(f"Overwrote CY2_InfraType to 'Protected bike lane (on-road)' for CLASS_CODE={class_code}, PFI={row.get('PFI', '')}")
+            class_code = f_road_class_index.get(row.get('highway', 'missing').strip()).get("value")
 
 
-            # SL_speed_limit - prioritize OS1_other_tags
-            #sl_speed_limit_final = None
-            #match_speed = re.search(r'"maxspeed"\s*=>\s*"(\d+)"', os1_tags)
-            #if match_speed:
-                #sl_speed_limit_final = match_speed.group(1)
-                #speed_override_count += 1
-                #print_timestamped(f" Overwrote SL_speed_limit to {sl_speed_limit_final} from OS1_other_tags for PFI {row.get('PFI', '')}")
-            #else:
-                #sl_speed_limit_final = row.get('SL_speed_limit', '').strip()
-
-            # SL_speed_limit - prioritize OS1_other_tags
-            
-            sl_speed_limit_final = row.get('Road_speed_limit','50')
-
-            if(int(sl_speed_limit_final) < 30): # default speeds < 30 to 30
+            # Speed
+            sl_speed_limit_final = row.get('Road_speed_limit','missing')
+            if sl_speed_limit_final == 'missing' or sl_speed_limit_final == '':
+                defaulted_speed_count += 1
+                sl_speed_limit_final = '50'
+            if(int(sl_speed_limit_final) < 30): # set speeds < 30 to 30
                 sl_speed_limit_final = '30'
             rem = 0
             if(int(sl_speed_limit_final) != 0): # round speed up to nearest 10
                 rem = 10
             sl_speed_limit_final = str((int(sl_speed_limit_final) // 10) * 10 + rem)               
 
-            infra_type = row.get('bike_lane', '').strip()
-            accommodation = infra_type.lower() if infra_type else 'no'
 
+            # setup for accom
+            accommodation = row.get('Bike_lane', 'no').strip().lower()
+            prot = row.get('Bike_lane_protection', '').strip()
             LTS_value = ''
+
             # F_bikeaccom logic
             f_bikeaccom_value = 0
             f_bikeaccom = 0
             if accommodation in f_bikeaccom_index:
                 f_bikeaccom_value = f_bikeaccom_index.get(accommodation, {}).get("value")
             else:
-                print(f"{accommodation} not in index")
-                f_bikeaccom_value = 0
+                #print(f"{accommodation} not in index")
+                f_bikeaccom_value = 1
                 missing_f_bikeaccom_count += 1
             try: 
                 f_bikeaccom = int(f_bikeaccom_value)
             except Exception:
                 f_bikeaccom = 0
                 missing_f_bikeaccom_count += 1
-            #print(f_bikeaccom_value, f_bikeaccom)
+            #print(f'A: {accommodation}, B: {f_bikeaccom}, P: {prot}')
+            if f_bikeaccom == 2:
+                if(prot == 'yes' or prot == 'both'):
+                    f_bikeaccom = 3
 
             #Slope
-            height = float(row.get('climb')) + float(row.get('descent'))
-            length = float(row.get('length'))
             try: 
-                slope = height / length
+                slope = float(row.get('slope_pct'))
             except Exception:
                 slope = 0.0
-
-            #Road type
-            if(f_bikeaccom == 4): #Off-road
-                road_type = 'off_road_path'
-            elif(f_bikeaccom == 3): #protected
-                road_type = 'protected_lane'
-            elif(f_bikeaccom == 1):
-                if(class_code < 3):
-                    road_type = 'arterial_mixed_traffic'
-                elif(class_code < 5):
-                    road_type = 'collector_mixed_traffic'
-                else:
-                    road_type = 'local_mixed_traffic'
-            elif(f_bikeaccom == 2 and class_code <3):
-                road_type = 'arterial_painted_lane'
-            else:
-                road_type = 'no_type'
-
+                defaulted_slope_count += 1
             
             #LTS
             # Get volume, will filter later
@@ -214,7 +167,7 @@ def add_f_roadway_to_Data_Links_Rev3(mrs_links_index, f_bikeaccom_index, f_road_
 
             #work out road class to use in key, as options change
             try: 
-                road_class_base = f_road_class_index.get(class_code, {}).get("value")
+                road_class_base = class_code
             except Exception:
                 road_class_base = 'p'
             road_class = ''
@@ -232,6 +185,23 @@ def add_f_roadway_to_Data_Links_Rev3(mrs_links_index, f_bikeaccom_index, f_road_
                 road_class = 'l,t'
             else:
                 road_class = 's,p'
+
+            #Road type
+            if(f_bikeaccom == 4): #Off-road
+                road_type = 'off_road_path'
+            elif(f_bikeaccom == 3): #protected
+                road_type = 'protected_lane'
+            elif(f_bikeaccom == 1):
+                if(class_code == 'p'):
+                    road_type = 'arterial_mixed_traffic'
+                elif(class_code == 's'):
+                    road_type = 'collector_mixed_traffic'
+                else:
+                    road_type = 'local_mixed_traffic'
+            elif(f_bikeaccom == 2 and class_code == 'p'):
+                road_type = 'arterial_painted_lane'
+            else:
+                road_type = 'no_type'
 
             #Now work out what volume key is
             volume_key = ''
@@ -258,8 +228,8 @@ def add_f_roadway_to_Data_Links_Rev3(mrs_links_index, f_bikeaccom_index, f_road_
             else:
                 LTS_value = mrs_links_index[key]['any']
         
-            if infra_type in ['Separated path (off-road)', 'Shared use path (off-road)'] or 'trail' in ftype_code:
-                LTS_value = '1'
+            #if infra_type in ['Separated path (off-road)', 'Shared use path (off-road)'] or 'trail' in ftype_code:
+            #    LTS_value = '1'
                         
             #POIs
             pois = numpy.random.randint(0,1500)
@@ -283,7 +253,7 @@ def add_f_roadway_to_Data_Links_Rev3(mrs_links_index, f_bikeaccom_index, f_road_
     print(f" Filtered WURUNDJERI WAY / tunnel rows: {filtered_rows_count}")
     print(f" Defaulted Link_Lanes: {defaulted_linklanes_count} rows")
     print(f" Defaulted SL_speed_limit: {defaulted_speed_count} rows")
-    print(f" Link_Lanes overrides from OS1_other_tags: {lanes_override_count}")
+    print(f" Slope values defaulted: {defaulted_slope_count}")
     print(f" SL_speed_limit overrides from OS1_other_tags: {speed_override_count}")
 
 def extract_wlink_and_pfi(input_file, output_file):
