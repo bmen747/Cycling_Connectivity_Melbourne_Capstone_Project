@@ -11,9 +11,9 @@ use_sidepath,4
 separate,3
 dismount,1
 shoulder,1
-opposite,1
+opposite,2
 permissive,1
-opposite_lane,1
+opposite_lane,2
 crossing,1
 private,1
 share_busway,2
@@ -40,3 +40,4 @@ unmarked,1
 asllane,1
 asl,1
 official,2
+,1
