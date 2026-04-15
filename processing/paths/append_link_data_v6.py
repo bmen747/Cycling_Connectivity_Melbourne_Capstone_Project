@@ -3,8 +3,8 @@ import numpy as math
 from pathlib import Path
 
 #DEFINES
-FOLDER_PATH = Path(r'C:\Users\kioso\OneDrive - The University of Melbourne\Files\cycling_project\python') #Ideally only changing this top path
-FILE_LINKS = FOLDER_PATH / r'data_links_updated.csv'
+FOLDER_PATH = Path(r'C:\Users\kioso\OneDrive - The University of Melbourne\Files\cycling_project\python\14-04-2026') #Ideally only changing this top path
+FILE_LINKS = FOLDER_PATH / r'data_links_reupdated.csv'
 FILE_PATHS = FOLDER_PATH / r'shortest_paths.csv'
 FILE_OUTPUT = FOLDER_PATH / r'shortest_paths_updated.csv'
 
